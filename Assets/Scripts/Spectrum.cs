@@ -49,7 +49,7 @@ public class Spectrum : MonoBehaviour
          **/ 
         for (int i = 0; i < numberOfObjects; i++)
         {
-            Vector3 previousScale = cubes[i].transform.localScale;
+           Vector3 previousScale = cubes[i].transform.localScale;
 
 
             if (spectrum[i] * newScale > 1.3)   //Only update the cube if the height is above set value (1.3)
