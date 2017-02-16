@@ -64,6 +64,8 @@ public class Spectrum : MonoBehaviour
             }
             cubes[i].transform.localScale = previousScale;
             
+           
+            
         }
     }
 
