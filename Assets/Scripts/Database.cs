@@ -4,6 +4,16 @@ using Mono.Data.Sqlite;
 using System.Data;
 using System;
 
+/// <summary>
+/// Database class offers connection to the local database. It should be
+/// only one connection opened which is realized through the use of the
+/// Singleton pattern.
+/// 
+/// == Usage ==
+/// IDbConnection db = Database.getConnection ();
+/// IDbCommand cmd = db.CreateCommand ();
+/// // and so on ...
+/// </summary>
 public class Database {
 
 	// Class instance
@@ -20,6 +30,7 @@ public class Database {
 
 
 
+	// Object initialization
 	private Database ()
 	{
 		// Path to database
@@ -29,6 +40,7 @@ public class Database {
 		con = connect(uri);
 	}
 
+	// Connect to dataabse
 	private IDbConnection connect(string uri)
 	{
 		// Connect to database
