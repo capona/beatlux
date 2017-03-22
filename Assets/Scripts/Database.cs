@@ -10,8 +10,8 @@ using System;
 /// Singleton pattern.
 /// 
 /// == Usage ==
-/// IDbConnection db = Database.getConnection ();
-/// IDbCommand cmd = db.CreateCommand ();
+/// SqliteConnection db = Database.getConnection ();
+/// SqliteCommand cmd = new SqliteCommand (db);
 /// // and so on ...
 /// </summary>
 public class Database {
@@ -26,7 +26,7 @@ public class Database {
 	private static string ext = "db";
 
 	// Database connection
-	static IDbConnection con;
+	static SqliteConnection con;
 
 
 
@@ -34,17 +34,17 @@ public class Database {
 	private Database ()
 	{
 		// Path to database
-		string uri = "URI=file:" + Application.dataPath + "/" + name + "." + ext;
+		string uri = "Data Source=" + Application.dataPath + "/" + name + "." + ext;
 
 		// Connect to database
 		con = Connect (uri);
 	}
 
 	// Connect to dataabse
-	private IDbConnection Connect (string uri)
+	private SqliteConnection Connect (string uri)
 	{
 		// Connect to database
-		con = (IDbConnection) new SqliteConnection (uri);
+		con = new SqliteConnection (uri);
 
 		// Open database connection
 		con.Open();
@@ -67,7 +67,7 @@ public class Database {
 
 
 	// Get instance (Singleton)
-	public static IDbConnection GetConnection ()
+	public static SqliteConnection GetConnection ()
 	{
 		// Create instance if not exists
 		if (instance == null) {
