@@ -8,8 +8,7 @@ using System.Collections.Generic;
 public class Playlist : MonoBehaviour {
 
 	// Database connection
-	IDbConnection db;
-
+	SqliteConnection db;
 
 	// Playlists
 	List<PlaylistObj> playlists = new List<PlaylistObj>();
@@ -21,25 +20,9 @@ public class Playlist : MonoBehaviour {
 
 		// Select playlists from database
 		LoadPlaylists ();
-		LoadPlaylists ();
-	}
 
-	bool DbConnect ()
-	{
-		if (db == null) {
-			db = Database.GetConnection ();
-		}
-
-		return db != null;
-	}
-
-	void DbClose ()
-	{
-		// Close database
-		Database.Close ();
-
-		// Reset database instance
-		db = null;
+		// Close database connection
+		DbClose ();
 	}
 
 	void LoadPlaylists ()
@@ -47,14 +30,14 @@ public class Playlist : MonoBehaviour {
 		if (DbConnect ())
 		{
 			// Database command
-			IDbCommand cmd = db.CreateCommand ();
+			SqliteCommand cmd = new SqliteCommand (db);
 
 			// Query statement
 			string sql = "SELECT id,name,files FROM playlist";
 			cmd.CommandText = sql;
 
 			// Get sql results
-			IDataReader reader = cmd.ExecuteReader ();
+			SqliteDataReader reader = cmd.ExecuteReader ();
 
 			// Read sql results
 			while (reader.Read ())
@@ -74,9 +57,9 @@ public class Playlist : MonoBehaviour {
 				foreach (string id in fileIDs)
 				{
 					// Send database query
-					IDbCommand cmd2 = db.CreateCommand ();
+					SqliteCommand cmd2 = new SqliteCommand (db);
 					cmd2.CommandText = "SELECT path FROM file WHERE id = '" + id + "'";
-					IDataReader fileReader = cmd2.ExecuteReader ();
+					SqliteDataReader fileReader = cmd2.ExecuteReader ();
 
 					// Read and add file paths
 					while (fileReader.Read ()) {
@@ -102,5 +85,144 @@ public class Playlist : MonoBehaviour {
 			// Close database connection
 			DbClose ();
 		}
+	}
+
+	int CreatePlaylist (PlaylistObj playlist)
+	{
+		if (DbConnect () && playlist != null)
+		{
+			// SQL settings
+			SqliteCommand cmd = null;
+			SqliteDataReader reader = null;
+			string sql = "";
+
+			// Check if playlist files are already in database
+			List<Int32> fileIDs = new List<Int32> ();
+			foreach (string file in playlist.Files)
+			{
+				// Query statement
+				sql = "SELECT id FROM file WHERE path = '" + file + "'";
+				cmd = new SqliteCommand (sql, db);
+
+				// Get sql results
+				reader = cmd.ExecuteReader ();
+
+				// Read and add file IDs
+				int count = 0;
+				while (reader.Read ()) {
+					fileIDs.Add (reader.GetInt32 (0));
+					count++;
+				}
+
+				// Close reader
+				reader.Close ();
+				cmd.Dispose ();
+
+				// Add file to database if not already exists
+				if (count == 0)
+				{
+					// Get file name
+					string[] name = file.Split(new Char[] {'/', '\\'});
+
+					// Query statement
+					sql = "INSERT INTO file (name,path) VALUES(" +
+						"'" + name[name.Length-1] + "'," +
+						"'" + file + "')";
+					cmd = new SqliteCommand (sql, db);
+
+					// Execute statement
+					cmd.ExecuteNonQuery ();
+					cmd.Dispose ();
+
+					// Read id: Query statement
+					sql = "SELECT id FROM file WHERE path = '" + file + "'";
+					cmd = new SqliteCommand (sql, db);
+
+					// Read id: Get sql results
+					reader = cmd.ExecuteReader ();
+
+					// Read id
+					while (reader.Read ()) {
+						fileIDs.Add (reader.GetInt32 (0));
+					}
+
+					// Close reader
+					reader.Close ();
+					cmd.Dispose ();
+				}
+			}
+
+			// Format file IDs
+			string files = "NULL";
+			if (fileIDs.Count > 0)
+			{
+				files = "'" + fileIDs [0].ToString ();
+
+				for(int i=1; i < fileIDs.Count; i++) {
+					files += "," + fileIDs [i].ToString ();
+				}
+
+				files += "'";
+			}
+
+			// Insert playlist into database
+			try
+			{
+				sql = "INSERT INTO playlist (name,files) VALUES(" +
+					"'" + playlist.Name + "'," +
+					files + ")";
+				cmd = new SqliteCommand (sql, db);
+
+				// Execute insert statement
+				cmd.ExecuteNonQuery ();
+				cmd.Dispose ();
+
+				// Select id of inserted playlist
+				sql = "SELECT id FROM playlist WHERE name = '" + playlist.Name + "'";
+				cmd = new SqliteCommand (sql, db);
+
+				// Get sql results
+				reader = cmd.ExecuteReader ();
+
+				// Read id
+				int playlistId = (int) Database.Constants.QueryFailed;
+				while (reader.Read ()) {
+					playlistId = reader.GetInt32 (0);
+				}
+
+				// Close reader
+				reader.Close();
+				cmd.Dispose ();
+
+				// Close database connection
+				DbClose ();
+
+				return playlistId;
+			}
+			catch (SqliteException e)
+			{
+				return (int) Database.Constants.DuplicateFound;
+			}
+		}
+
+		return (int) Database.Constants.QueryFailed;
+	}
+
+	bool DbConnect ()
+	{
+		if (db == null) {
+			db = Database.GetConnection ();
+		}
+
+		return db != null;
+	}
+
+	void DbClose ()
+	{
+		// Close database
+		Database.Close ();
+
+		// Reset database instance
+		db = null;
 	}
 }
