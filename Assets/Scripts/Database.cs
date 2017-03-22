@@ -26,7 +26,7 @@ public class Database {
 	private static string ext = "db";
 
 	// Database connection
-	private static IDbConnection con;
+	static IDbConnection con;
 
 
 
@@ -37,11 +37,11 @@ public class Database {
 		string uri = "URI=file:" + Application.dataPath + "/" + name + "." + ext;
 
 		// Connect to database
-		con = connect(uri);
+		con = Connect (uri);
 	}
 
 	// Connect to dataabse
-	private IDbConnection connect(string uri)
+	private IDbConnection Connect (string uri)
 	{
 		// Connect to database
 		con = (IDbConnection) new SqliteConnection (uri);
@@ -52,10 +52,22 @@ public class Database {
 		return con;
 	}
 
+	// Close database connection
+	public static void Close ()
+	{
+		// Close connection to database
+		if (con != null) {
+			con.Close ();
+		}
+
+		// Reset instance
+		instance = null;
+	}
+
 
 
 	// Get instance (Singleton)
-	public static IDbConnection getConnection ()
+	public static IDbConnection GetConnection ()
 	{
 		// Create instance if not exists
 		if (instance == null) {
