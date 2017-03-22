@@ -28,6 +28,13 @@ public class Database {
 	// Database connection
 	static SqliteConnection con;
 
+	// Enums for error handling
+	public enum Constants : int
+	{
+		QueryFailed = -1,
+		DuplicateFound = -2
+	}
+
 
 
 	// Object initialization
