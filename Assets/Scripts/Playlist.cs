@@ -199,7 +199,7 @@ public class Playlist : MonoBehaviour {
 
 				return playlistId;
 			}
-			catch (SqliteException e)
+			catch (SqliteException)
 			{
 				return (int) Database.Constants.DuplicateFound;
 			}
